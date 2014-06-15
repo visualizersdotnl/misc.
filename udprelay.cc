@@ -1,7 +1,5 @@
 
 // UDP multicast to TCP relay server for Linux/Ubuntu.
-// Publicly known as DVBProxy.
-// (C) by RTSS B.V.
 
 // Running Ubuntu? For the UDP (multicast) NIC, don't forget to:
 // 1) Assign a static IP through the network manager.
@@ -12,9 +10,7 @@
 // Or call Saul.
 
 // To do (major):
-// - Installation script or package.
 // - Instead of multiple instances, instantiate multiple servers (*).
-// - Rockey protection (rewrite, supply Savas with it for IPProbe).
 
 // To do (minor):
 // - Unicast support.
@@ -993,7 +989,7 @@ int main(int argC, char **argV)
 		return 1;		
 	}
 
-	// -- REPLACE W/CONF PARSE --
+	// Replace following with proper configuration parse:	
 	//
 
 	if (argC <= 3)
@@ -1015,10 +1011,8 @@ int main(int argC, char **argV)
 		return 1;
 	}
 
-	//
-	// -- REPLACE W/CONF PARSE --
-
-
+	// ^^
+	
 	int hPIDFile = -1;
 
 	// Daemonize.
