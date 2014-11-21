@@ -109,8 +109,11 @@ namespace AspectRatios
 	// - http://en.wikipedia.org/wiki/Technirama
 	namespace Technirama
 	{
-		const float kFilm = 2.55f;
+		const float kFilm = 2.25f;
 		const float kTheatre = Academy::kAnamorphic;
+		const float kExperimental = 2.55f;
+		// ^ kExperimental:
+		// The 2008 DVD and Blu-ray Disc release of Walt Disney's Sleeping Beauty was shown at an aspect-ratio of 2.55:1 for the first time.
 	};
 	
 	// VistaVision (prem. 1954)
