@@ -17,8 +17,9 @@
  *  - 25/01/2012 - Fixed Techniscope::kTheatre.
  *  - 27/01/2012 - Grouped Panavision, documented Todd-AO and fixed several (anamorphic) formats.
  *                 Added IMAX.
+ *  - 22/11/2013 - Updated Technirama.
  *
- * (C) 2012 visualizers.nl
+ * (C) 2014 visualizers.nl
  */
 
 #ifndef _ASPECTRATIOS_H_
