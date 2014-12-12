@@ -18,6 +18,7 @@
  *  - 27/01/2012 - Grouped Panavision, documented Todd-AO and fixed several (anamorphic) formats.
  *                 Added IMAX.
  *  - 22/11/2013 - Updated Technirama.
+ *  - 12/12/2014 - Added PolyVision Ultra.
  *
  * (C) 2014 visualizers.nl
  */
@@ -49,6 +50,12 @@ namespace AspectRatios
 	// This format is still used by Kraftwerk on tour.
 	//
 	const float kPolyvision = 4.f;
+
+	// PolyVision Ultra (12/2014)
+	//
+	// A format I made up myself, to be pushed into mainstream if I can help it.
+	//
+	const float kPolyVisionUltra = 2.f;
 	
 	// Cinerama (prem. 1952)
 	// - http://en.wikipedia.org/wiki/Cinerama
