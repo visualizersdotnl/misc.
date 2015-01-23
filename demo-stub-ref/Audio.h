@@ -1,7 +1,7 @@
 
 #pragma once
 
-// Use to enumerate available devices by name. Zero based.
+// Use to enumerate available devices by name. 1-based!
 void Audio_EnumerateDevices(std::vector<std::string> &deviceNames);
 
 // 'iDevice' - valid device index or -1 for system default
