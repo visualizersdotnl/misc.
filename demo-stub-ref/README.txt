@@ -1,4 +1,8 @@
 
+!!
+NOTE: switching this codebase to Unicode is on the to-do list, right now there's some uglyness left and right because it hasn't been done yet.
+!!
+
 These are a few files part of the TPBDS mark 3 player stub.
 
 It's intent is to serve as a reference on how to correctly handle a DirectX-based Windows demo,
