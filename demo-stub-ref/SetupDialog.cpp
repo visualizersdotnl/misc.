@@ -68,6 +68,7 @@ public:
 		return numerator < RHS.numerator;
 	}
 
+private:
 	unsigned int width, height;
 	unsigned int numerator, denominator;
 };
