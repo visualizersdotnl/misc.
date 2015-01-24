@@ -41,12 +41,16 @@ static bool UpdateOutputs(HWND hDialog, UINT iAdapter)
 		VERIFY(S_OK == pOutput->GetDesc(&desc));
 
 		MONITORINFOEXW monInfoEx;
-		monInfoEx.cbSize = sizeof(MONITORINFOEXW);
-		GetMonitorInfoW(desc.Monitor, &monInfoEx);
-
 		DISPLAY_DEVICEW dispDev;
+		monInfoEx.cbSize = sizeof(MONITORINFOEXW);
 		dispDev.cb = sizeof(DISPLAY_DEVICEW);
-		EnumDisplayDevicesW(monInfoEx.szDevice, 0, &dispDev, 0);
+
+		if (FALSE == GetMonitorInfoW(desc.Monitor, &monInfoEx) || FALSE == EnumDisplayDevicesW(monInfoEx.szDevice, 0, &dispDev, 0))
+		{
+			// This shouldn't happen, right?
+			ASSERT(0); 
+			wcscpy_s(dispDev.DeviceString, 128, L"Unidentified output device");
+		}
 
 		// What shows up here would more often than not be "Plug & Play Monitor" or something likewise.
 		// But if someone actually takes the time to install a monitor driver that's what you'll get.
@@ -161,8 +165,8 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 				SendDlgItemMessageW(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_ADDSTRING, 0, (LPARAM) desc.Description);
 				pAdapter->Release();
 			}
-			
-			// FIXME: detect which one renders the primary desktop?
+
+			// Index 0 is always the default (primary) display adapter.			
 			SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_SETCURSEL, 0, 0);
 
 			// Select primary adapter and display (verified to be present by Stub.cpp).
