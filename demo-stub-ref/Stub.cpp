@@ -483,7 +483,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 	if (CreateDXGI(hInstance))
 	{
 #if (!defined(_DEBUG) && !defined(_DESIGN)) || defined(PLAYER_FORCE_SETUP_DIALOG)
-		// At this point DXGI is ready to use the primary display and for most cases that's just what I need
+		// At this point DXGI is ready to use the primary display and for most cases that's just what I need.
 		// However, bitches at http://www.pouet.net asked for a setup dialog, so I'm providing one.
 		// It does things "on top" meaning that it's easy to just skip for certain build types.
 		// Any additional DXGI/Win32 logic is handled in SetupDialog.cpp itself.
