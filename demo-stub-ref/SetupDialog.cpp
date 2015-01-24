@@ -58,12 +58,12 @@ public:
 		return desc.str();
 	}
 
-	bool operator ==(const AspectRatio &RHS)
+	bool operator ==(const AspectRatio &RHS) const
 	{
 		return numerator == RHS.numerator && denominator == RHS.denominator;		
 	}
 
-	bool operator <(const AspectRatio &RHS)
+	bool operator <(const AspectRatio &RHS) const
 	{
 		return numerator < RHS.numerator;
 	}
