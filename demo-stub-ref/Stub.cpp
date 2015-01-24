@@ -29,7 +29,7 @@
 
 // audio settings
 const std::string kMP3Path = PLAYER_MP3_PATH;
-const bool kMuteAudio = PLAYER_MUTE_AUDIO_DEV;
+const bool kMuteAudio = PLAYER_MUTE_AUDIO;
 
 // configuration: windowed / full screen
 bool s_windowed = PLAYER_WINDOWED_DEV; // Can be modified later by setup dialog.
@@ -514,8 +514,8 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 #else
 		if (true)
 		{
-			// Use default audio adapter or silence, other variables are already configured correctly.
-			int iAudioDev = (true == kMuteAudio) ? 0 : -1;
+			// Use default audio adapter, other variables are already configured correctly.
+			int iAudioDev = -1;
 			const bool vSync = PLAYER_VSYNC_DEV;
 #endif
 

@@ -50,7 +50,7 @@ const bool PLAYER_RUN_FROM_SHADER_BINARIES = false;
 
 // Audio settings.
 const std::string PLAYER_MP3_PATH = "ROSS2.mp3"; // Relative to asset root (see Demo.cpp).
-const bool PLAYER_MUTE_AUDIO_DEV = false;
+const bool PLAYER_MUTE_AUDIO = false;
 
 // Audio sync. settings.
 const double PLAYER_ROCKET_BPM = 127.0;
