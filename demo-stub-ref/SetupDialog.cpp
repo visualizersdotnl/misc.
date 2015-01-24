@@ -5,24 +5,88 @@
 */
 
 #include <Core/Platform.h>
+#include <iomanip> // for std::setprecision()
 #include <Core/Settings.h>
 #include "Resource.h"
 #include "SetLastError.h"
 #include "Audio.h"
+
+// Aspect ratio container (with some elementary school math for reduction).
+class AspectRatio
+{
+public:
+	AspectRatio() : numerator(0), denominator(1) {}
+
+	AspectRatio(unsigned int width, unsigned int height) :
+		width(width), height(height)
+	{
+		ASSERT(0 != width && 0 != height);
+		Reduce();
+	}
+
+private:
+	unsigned int GCD(unsigned int A, unsigned int B) const
+	{
+		return (0 == B) ? A : GCD(B, A%B);
+	}
+
+	void Reduce()
+	{
+		const unsigned int divisor = GCD(width, height);
+		numerator   = width/divisor;
+		denominator = height/divisor;		
+	}
+
+public:
+	float GetRatio() const 
+	{ 
+		return (float) numerator / denominator; 
+	}
+	
+	const std::string GetDesc() const
+	{
+		std::stringstream desc;
+		desc << numerator << ":" << denominator;
+
+		// A wild guess to determine if this reduction might look unintuitive and thus could use extra information.
+		if (numerator > 16 || denominator > 10)
+		{
+			// This happens (e.g. 1600x1024 reduces to 25:16), so add a bit more information.
+			desc << " (" << width << "x" << height << ", ratio: " << std::setprecision(3) << GetRatio() << ")";
+		}
+
+		return desc.str();
+	}
+
+	bool operator ==(const AspectRatio &RHS)
+	{
+		return numerator == RHS.numerator && denominator == RHS.denominator;		
+	}
+
+	bool operator <(const AspectRatio &RHS)
+	{
+		return numerator < RHS.numerator;
+	}
+
+	unsigned int width, height;
+	unsigned int numerator, denominator;
+};
 
 // Pointers to settings.
 static int            *s_iAudioDev; 
 static UINT           *s_iAdapter;
 static UINT           *s_iOutput;
 static DXGI_MODE_DESC *s_mode;
+static float          *s_aspectRatio;
 static bool           *s_windowed;
 static bool           *s_vSync;
 
 // Temp.
 static IDXGIFactory1 *s_pDXGIFactory;
 
-static std::vector<DEVMODEW> s_curOutputModes;
+static std::vector<DEVMODEW>       s_curOutputModes;
 static std::vector<DXGI_MODE_DESC> s_enumeratedModes;
+static std::list<AspectRatio>      s_aspectRatios;
 
 static bool UpdateOutputs(HWND hDialog, UINT iAdapter)
 {
@@ -87,8 +151,14 @@ static bool UpdateOutputs(HWND hDialog, UINT iAdapter)
 
 static void UpdateDisplayModes(HWND hDialog, UINT iAdapter, UINT iOutput)
 {
-	// Wipe combobox.
+	// Wipe comboboxes (modes & ratios).
 	SendDlgItemMessage(hDialog, IDC_COMBO_RESOLUTION, CB_RESETCONTENT, 0, 0);
+	SendDlgItemMessage(hDialog, IDC_COMBO_ASPECT, CB_RESETCONTENT, 0, 0);
+
+	// Add (recommended) automatic aspect ratio adjustment setting, and select it.
+	// In 99% of the cases this is what's correct.
+	SendDlgItemMessage(hDialog, IDC_COMBO_ASPECT, CB_ADDSTRING, 0 , (LPARAM) "Automatic (recommended)");
+	SendDlgItemMessage(hDialog, IDC_COMBO_ASPECT, CB_SETCURSEL, 0, 0);
 
 	IDXGIAdapter1 *pAdapter = nullptr;
 	IDXGIOutput *pOutput = nullptr;
@@ -100,14 +170,29 @@ static void UpdateDisplayModes(HWND hDialog, UINT iAdapter, UINT iOutput)
 	s_enumeratedModes.resize(numModes);
 	VERIFY(S_OK == pOutput->GetDisplayModeList(Pimp::D3D_BACKBUFFER_FORMAT_LIN, 0, &numModes, &s_enumeratedModes[0]));
 
+	s_aspectRatios.clear();
+
 	for (auto &mode : s_enumeratedModes)
 	{
 		std::stringstream resolution;
 		resolution << mode.Width << "x" << mode.Height << " @ " << mode.RefreshRate.Numerator/mode.RefreshRate.Denominator << "Hz";
 		SendDlgItemMessage(hDialog, IDC_COMBO_RESOLUTION, CB_ADDSTRING, 0, (LPARAM) resolution.str().c_str());
+
+		// Add it's aspect ratio to list.
+		s_aspectRatios.push_back(AspectRatio(mode.Width, mode.Height));		
 	}			
 
-	// Select first one by default; now we'll try to find the active mode.
+	// Sort aspect ratios and remove duplicates.
+	s_aspectRatios.sort();
+	s_aspectRatios.unique();
+
+	// Add derived aspect ratios (retain automatic setting as default) to combobox.
+	for (auto &ratio : s_aspectRatios)
+	{
+		SendDlgItemMessage(hDialog, IDC_COMBO_ASPECT, CB_ADDSTRING, 0, (LPARAM) ratio.GetDesc().c_str());
+	}
+
+	// Select first display mode by default; now we'll try to find the active mode.
 	SendDlgItemMessage(hDialog, IDC_COMBO_RESOLUTION, CB_SETCURSEL, 0, 0);
 
 	// Find active or matching (typically desktop) display mode.
@@ -181,19 +266,40 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 		{
 		case IDOK:
 			{
-				// Store selected settings.
+				// Get settings:
+
+				// - Audio device
 				*s_iAudioDev = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_AUDIO_ADAPTER, CB_GETCURSEL, 0, 0);
 
+				// - Toggles
 				*s_windowed = BST_CHECKED == IsDlgButtonChecked(hDialog, IDC_CHECK_WINDOWED);
 				*s_vSync    = BST_CHECKED == IsDlgButtonChecked(hDialog, IDC_CHECK_VSYNC);
 
 				if (false == *s_windowed)
 				{
+					// Adapter & output (or display if you will).
 					*s_iAdapter  = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
 					*s_iOutput   = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_OUTPUT, CB_GETCURSEL, 0, 0);
-				
+					
+					// Display mode.
 					const size_t iMode = (size_t) SendDlgItemMessage(hDialog, IDC_COMBO_RESOLUTION, CB_GETCURSEL, 0, 0);
 					*s_mode = s_enumeratedModes[iMode];
+
+					// Aspect ratio.
+					const UINT iAspect = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_ASPECT, CB_GETCURSEL, 0 , 0);
+					if (0 == iAspect)
+					{
+						// Automatic mode.
+						*s_aspectRatio = -1.f;
+					}
+					else
+					{
+						// Get override from list (a feature recommended by KB/Farbrausch).
+						auto iListRatio = s_aspectRatios.begin();
+						std::advance(iListRatio, iAspect-1);
+						ASSERT(iListRatio != s_aspectRatios.end());
+						*s_aspectRatio = iListRatio->GetRatio();
+					}
 
 					// Force format to gamma-corrected one.
 					s_mode->Format = Pimp::D3D_BACKBUFFER_FORMAT_GAMMA;
@@ -203,6 +309,9 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 					// Use primary adapter and display (verified to be present by Stub.cpp).
 					*s_iAdapter = 0;
 					*s_iOutput = 0;
+
+					// Aspect ratio will need no correction.
+					*s_aspectRatio = -1.f;
 
 					// Display mode is defined by Stub.cpp in windowed mode.
 				}
@@ -218,13 +327,14 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 			switch (HIWORD(wParam))
 			{
 			case CBN_SELCHANGE:
-				// Adapter changed: update output & mode list (for output #0).
+				// Adapter changed: update output plus mode & aspect list (for output #0).
 				*s_iAdapter = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
 				
 				// If an adapter has no outputs, prohibit further configuration and OK (start).
 				const bool hasOutputs = UpdateOutputs(hDialog, *s_iAdapter);
 				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_OUTPUT), hasOutputs);
 				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_RESOLUTION), hasOutputs);
+				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_ASPECT), hasOutputs);
 				EnableWindow(GetDlgItem(hDialog, IDOK), hasOutputs);
 
 				// FIXME: I am not sure if it would be possible for a card not attached to any output to render in windowed mode?
@@ -243,7 +353,7 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 			switch (HIWORD(wParam))
 			{
 			case CBN_SELCHANGE:
-				// Output changed: update mode list.
+				// Output changed: update mode & aspect list.
 				*s_iAdapter = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
 				*s_iOutput  = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_OUTPUT, CB_GETCURSEL, 0, 0);
 				UpdateDisplayModes(hDialog, *s_iAdapter, *s_iOutput);
@@ -259,10 +369,12 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 			case BN_CLICKED:
 				// Grey out specific settings if windowed box is checked.
 				*s_windowed = BST_CHECKED == IsDlgButtonChecked(hDialog, IDC_CHECK_WINDOWED);
-				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_DISPLAY_ADAPTER), false == *s_windowed);
-				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_OUTPUT), false == *s_windowed);
-				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_RESOLUTION), false == *s_windowed);
-				EnableWindow(GetDlgItem(hDialog, IDC_CHECK_VSYNC), false == *s_windowed);
+				const BOOL enable = false == *s_windowed;
+				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_DISPLAY_ADAPTER), enable);
+				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_OUTPUT), enable);
+				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_RESOLUTION), enable);
+				EnableWindow(GetDlgItem(hDialog, IDC_COMBO_ASPECT), enable);
+				EnableWindow(GetDlgItem(hDialog, IDC_CHECK_VSYNC), enable);
 
 				return 0;
 			}
@@ -280,6 +392,7 @@ bool SetupDialog(
 	UINT &iAdapter, 
 	UINT &iOutput, 
 	DXGI_MODE_DESC &mode, 
+	float &aspectRatio,
 	bool &windowed, 
 	bool &vSync,
 	IDXGIFactory1 &DXGIFactory)
@@ -289,6 +402,7 @@ bool SetupDialog(
 	s_iAdapter     = &iAdapter;
 	s_iOutput      = &iOutput;
 	s_mode         = &mode;
+	s_aspectRatio  = &aspectRatio;
 	s_windowed     = &windowed;
 	s_vSync        = &vSync;
 	s_pDXGIFactory = &DXGIFactory;

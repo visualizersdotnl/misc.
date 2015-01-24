@@ -491,10 +491,11 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 		int iAudioDev;
 		UINT iAdapter, iOutput;
 		DXGI_MODE_DESC dispMode;
+		float aspectRatioOverride;
 		bool windowed;
 		bool vSync;
 
-		if (true == SetupDialog(hInstance, iAudioDev, iAdapter, iOutput, dispMode, windowed, vSync, *s_pDXGIFactory)) 
+		if (true == SetupDialog(hInstance, iAudioDev, iAdapter, iOutput, dispMode, aspectRatioOverride, windowed, vSync, *s_pDXGIFactory)) 
 		{
 			s_windowed = windowed;
 
@@ -519,9 +520,11 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 #else
 		if (true)
 		{
-			// Use default audio adapter and dev. sync. setting; other variables are already configured correctly.
-			const int iAudioDev = -1;
-			const bool vSync = PLAYER_VSYNC_DEV;
+			const int iAudioDev = -1;            // Default audio device.
+			const bool vSync = PLAYER_VSYNC_DEV; // Dev. toggle.
+			float aspectRatioOverride = -1.f;    // Automatic mode.
+
+			// Other variables are already set up correctly.
 #endif
 
 			// now set up Core configuration
@@ -544,7 +547,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 						try
 						{
 							// Initialize Core D3D.
-							std::unique_ptr<Pimp::D3D> pCoreD3D(new Pimp::D3D(s_pD3D, s_pD3DContext, s_pSwapChain));
+							std::unique_ptr<Pimp::D3D> pCoreD3D(new Pimp::D3D(s_pD3D, s_pD3DContext, s_pSwapChain, aspectRatioOverride));
 							Pimp::gD3D = pCoreD3D.get();
 
 							// Prepare demo resources.
