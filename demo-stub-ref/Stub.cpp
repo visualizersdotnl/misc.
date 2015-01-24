@@ -611,6 +611,9 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 									Demo::WorldRender();
 									Pimp::gD3D->Flip((true == windowed) ? 0 : true == vSync); // Windowed is always in vertical sync.
 
+									// Crash handler test :)
+//									Pimp::gD3D = (Pimp::D3D*) 0x124;
+
 									if (true == s_windowed)
 									{
 										// handle FPS counter
@@ -676,16 +679,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 	}
 	__except(EXCEPTION_EXECUTE_HANDLER)
 	{
-		if (false == s_windowed)
-		{
-			// Try a few things to restore the desktop.
-			// Only worth trying if running full screen.
-			SAFE_RELEASE(s_pSwapChain);
-			if (NULL != s_hWnd) DestroyWindow(s_hWnd);
-		}
+		// Attempt to restore the desktop.
+		SAFE_RELEASE(s_pSwapChain);
+		if (NULL != s_hWnd) DestroyWindow(s_hWnd);
+
+		// And shut off the audio too.
+		Audio_Destroy();
 
 		// Sound the alarm bell.
-		MessageBox(NULL, "Demo crashed (unhandled exception). Now quickly: http://www.pouet.net!", PLAYER_RELEASE_ID, MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(NULL, "Demo crashed (unhandled exception). Now quickly: http://www.pouet.net!", PLAYER_RELEASE_ID.c_str(), MB_OK | MB_ICONEXCLAMATION);
 
 		// Better do as little as possible past this point.
 		_exit(1); 
