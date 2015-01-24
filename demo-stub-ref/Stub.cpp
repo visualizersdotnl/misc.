@@ -11,7 +11,7 @@
 	- Provide a stable main loop.
 	- Take care of proper shutdown and error message display.
 
-	Oh, and try some leak detection using an external tool or debug heap.
+	Add basic leak detection?
 */
 
 #include <Core/Platform.h>
@@ -38,11 +38,10 @@ const unsigned int kWindowedResY = PLAYER_WINDOWED_RES_Y;
 
 // When *not* using SetupDialog():
 //
-// In full screen mode the desktop resolution is adapted.
+// In full screen mode the primary desktop resolution is adapted.
 //
-// Adapting the desktop resolution makes good sense: it's usually the viewer's optimal resolution
-// without monitor distortion. And a beam team can very well be instructed to select an appropriate one
-// for performance reasons.
+// Using the desktop resolution makes good sense: it's usually the display's optimal resolution.
+// A beam team can very well be instructed to select a more appropriate one for performance reasons.
 //
 // SetupDialog() allows for full user configuration.
 
@@ -483,12 +482,11 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 	// initialize DXGI
 	if (CreateDXGI(hInstance))
 	{
-
 #if (!defined(_DEBUG) && !defined(_DESIGN)) || defined(PLAYER_FORCE_SETUP_DIALOG)
-		// At this point DXGI is ready to rock, and for most cases (including INDIGO Jukebox) it's just what I need.
-		// However, bitches at http://www.pouet.net these days require a setup dialog. So we're going to do things "on top"
-		// if you will meaning that it'll be easy to discard entirely or skip for certain build types. 
-		// Additional DXGI logic is handled in SetupDialog.cpp itself.
+		// At this point DXGI is ready to use the primary display and for most cases that's just what I need
+		// However, bitches at http://www.pouet.net asked for a setup dialog, so I'm providing one.
+		// It does things "on top" meaning that it's easy to just skip for certain build types.
+		// Any additional DXGI/Win32 logic is handled in SetupDialog.cpp itself.
 
 		int iAudioDev;
 		UINT iAdapter, iOutput;
@@ -498,24 +496,31 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
 		if (true == SetupDialog(hInstance, iAudioDev, iAdapter, iOutput, dispMode, windowed, vSync, *s_pDXGIFactory)) 
 		{
-			// override safe globals with dialog picks
 			s_windowed = windowed;
-			if (false == windowed)
+
+			if (false == s_windowed) 
 			{
+				// Release primary devices.
 				SAFE_RELEASE(s_pDisplay);
 				SAFE_RELEASE(s_pAdapter);
+
+				// Get selected devices.
 				VERIFY(S_OK == s_pDXGIFactory->EnumAdapters1(iAdapter, &s_pAdapter));
 				VERIFY(S_OK == s_pAdapter->EnumOutputs(iOutput, &s_pDisplay));
+				
+				// Override display mode.
 				s_displayMode = dispMode;
-			}
+			} 
+			
+			// In windowed mode we'll use the primary adapter (display is irrelevant).
 
 			// First pick (0) is default output, which is -1 for BASS_Init().
 			if (0 == iAudioDev) iAudioDev = -1;
 #else
 		if (true)
 		{
-			// Use default audio adapter, other variables are already configured correctly.
-			int iAudioDev = -1;
+			// Use default audio adapter and dev. sync. setting; other variables are already configured correctly.
+			const int iAudioDev = -1;
 			const bool vSync = PLAYER_VSYNC_DEV;
 #endif
 
