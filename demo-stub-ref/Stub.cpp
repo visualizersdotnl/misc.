@@ -491,11 +491,11 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 		int iAudioDev;
 		UINT iAdapter, iOutput;
 		DXGI_MODE_DESC dispMode;
-		float aspectRatioOverride;
+		float aspectRatio;
 		bool windowed;
 		bool vSync;
 
-		if (true == SetupDialog(hInstance, iAudioDev, iAdapter, iOutput, dispMode, aspectRatioOverride, windowed, vSync, *s_pDXGIFactory)) 
+		if (true == SetupDialog(hInstance, iAudioDev, iAdapter, iOutput, dispMode, aspectRatio, windowed, vSync, *s_pDXGIFactory)) 
 		{
 			s_windowed = windowed;
 
@@ -522,18 +522,10 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 		{
 			const int iAudioDev = -1;            // Default audio device.
 			const bool vSync = PLAYER_VSYNC_DEV; // Dev. toggle.
-			float aspectRatioOverride = -1.f;    // Automatic mode.
+			float aspectRatio = -1.f;            // Automatic mode.
 
 			// Other variables are already set up correctly.
 #endif
-
-			// now set up Core configuration
-			Pimp::Configuration::DisplayMode displayMode;
-			displayMode.width = s_displayMode.Width;
-			displayMode.height = s_displayMode.Height;
-			Pimp::gCoreCfg.SetDisplayMode(displayMode);
-			Pimp::gCoreCfg.SetFullscreen(false == s_windowed);
-			Pimp::gCoreCfg.SetRenderAspectRatio(PLAYER_RENDER_ASPECT_RATIO);
 
 			// create app. window
 			if (CreateAppWindow(hInstance, nCmdShow))
@@ -546,8 +538,18 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 					{
 						try
 						{
+							if (-1.f == aspectRatio)
+							{
+								// Derive from resolution (square pixels).
+								aspectRatio = (float) s_displayMode.Width / s_displayMode.Height;
+							}
+
 							// Initialize Core D3D.
-							std::unique_ptr<Pimp::D3D> pCoreD3D(new Pimp::D3D(s_pD3D, s_pD3DContext, s_pSwapChain, aspectRatioOverride));
+							std::unique_ptr<Pimp::D3D> pCoreD3D(new Pimp::D3D(
+								*s_pD3D, *s_pD3DContext, *s_pSwapChain, 
+								PLAYER_RENDER_ASPECT_RATIO, aspectRatio));
+							
+							// FIXME: get rid of these Core globals.
 							Pimp::gD3D = pCoreD3D.get();
 
 							// Prepare demo resources.
