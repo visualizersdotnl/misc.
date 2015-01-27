@@ -25,8 +25,9 @@ const bool PLAYER_WINDOWED_DEV = true;
 // Force setup dialog (disabled by default in debug and design builds).
 #define PLAYER_FORCE_SETUP_DIALOG
 
-// Force vertical sync. in development builds.
+// Dev. settings if dialog isn't being used:
 const bool PLAYER_VSYNC_DEV = false;
+const UINT PLAYER_MULTI_SAMPLE_DEV = 1; // 1 means OFF, otherwise: 2, 4, 8.
 
 // Development Polyvision Ultra.
 const unsigned int PLAYER_WINDOWED_RES_X = 1000;
