@@ -1,17 +1,19 @@
 	
 /*
-	Player stub.
+	TPBDS mark III player stub.
 
-	Look for 'FIXME' & '@plek' -> stuff to either, fix, remove or formalize.
+	In the codebase, look for 'FIXME' & '@plek' -> stuff to either, fix, remove or formalize.
 
-	The idea here is to:
+	Main goal:
 	- Create and manage a simple render window.
 	- Initialize and maintain DXGI/D3D and create the device exactly like Core wants it.
 	- Kick off audio.
 	- Provide a stable main loop.
 	- Take care of proper shutdown and error message display.
-
-	Add basic leak detection?
+	
+	To do:
+	- Add basic leak detection?
+	- Integrate XInput code from INDIGO Jukebox?
 */
 
 #include <Core/Platform.h>
@@ -382,7 +384,7 @@ void DestroyAppWindow(HINSTANCE hInstance)
 	}
 }
 
-static bool CreateDirect3D()
+static bool CreateDirect3D(const DXGI_SAMPLE_DESC &multiDesc)
 {
 	// create device
 #if _DEBUG
@@ -410,8 +412,7 @@ static bool CreateDirect3D()
 	DXGI_SWAP_CHAIN_DESC swapDesc;
 	memset(&swapDesc, 0, sizeof(swapDesc));
 	swapDesc.BufferDesc = s_displayMode;
-	swapDesc.SampleDesc.Count = Pimp::D3D_ANTIALIAS_NUM_SAMPLES;
-	swapDesc.SampleDesc.Quality = Pimp::D3D_ANTIALIAS_QUALITY;
+	swapDesc.SampleDesc = multiDesc;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapDesc.BufferCount = 2;
 	swapDesc.OutputWindow = s_hWnd;
@@ -421,7 +422,7 @@ static bool CreateDirect3D()
 
 	HRESULT hRes = D3D11CreateDeviceAndSwapChain(
 		s_pAdapter,
-		D3D_DRIVER_TYPE_UNKNOWN, // This is documented in the "Remarks" section of this call.
+		D3D_DRIVER_TYPE_UNKNOWN, // A must if s_pAdapter isn't NULL; documented under the remarks section of this call.
 		NULL,
 		Flags,
 		featureLevels, ARRAYSIZE(featureLevels),
@@ -439,12 +440,15 @@ static bool CreateDirect3D()
 		return true;
 	}
 
-	// Failed :(
+	// Failed: build a somewhat meaningful message.
 	std::stringstream message;
 	message << "Can't create Direct3D 11.0 device.\n\n";
 	message << ((true == s_windowed) ? "Type: windowed.\n" : "Type: full screen.\n");
-	message << "Resolution: " << s_displayMode.Width << "*" << s_displayMode.Height << ".\n\n";
+	message << "Resolution: " << s_displayMode.Width << "*" << s_displayMode.Height << ".\n";
+	if (0 != multiDesc.Quality) message << "Multi-sampling enabled.\n";
+	message << "\n";
 	message << DXGetErrorString(hRes) << " - " << DXGetErrorDescription(hRes) << ".\n";
+
 	SetLastError(message.str());
 	return false;
 }
@@ -492,10 +496,11 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 		UINT iAdapter, iOutput;
 		DXGI_MODE_DESC dispMode;
 		float aspectRatio;
+		UINT multiSamples;
 		bool windowed;
 		bool vSync;
 
-		if (true == SetupDialog(hInstance, iAudioDev, iAdapter, iOutput, dispMode, aspectRatio, windowed, vSync, *s_pDXGIFactory)) 
+		if (true == SetupDialog(hInstance, iAudioDev, iAdapter, iOutput, dispMode, aspectRatio, multiSamples, windowed, vSync, *s_pDXGIFactory)) 
 		{
 			s_windowed = windowed;
 
@@ -520,9 +525,10 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 #else
 		if (true)
 		{
-			const int iAudioDev = -1;            // Default audio device.
-			const bool vSync = PLAYER_VSYNC_DEV; // Dev. toggle.
-			float aspectRatio = -1.f;            // Automatic mode.
+			const int iAudioDev = -1;                    // Default audio device.
+			const bool vSync = PLAYER_VSYNC_DEV;         // Dev. toggle.
+			float aspectRatio = -1.f;                    // Automatic mode.
+			UINT multiSamples = PLAYER_MULTI_SAMPLE_DEV; // Dev. multisampling.
 
 			// Other variables are already set up correctly.
 #endif
@@ -533,8 +539,22 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 				// initialize audio
 				if (Audio_Create(iAudioDev, s_hWnd, Demo::GetAssetsPath() + kMP3Path, kMuteAudio))
 				{
+					DXGI_SAMPLE_DESC multiDesc;
+					if (1 > multiSamples)
+					{
+						multiDesc.Count = 1;
+						multiDesc.Quality = 0;
+					}
+					else
+					{
+						// According to D3D11 spec. 1 (does not apply here), 2, 4 and 8 must be supported.
+						ASSERT(multiSamples == 2 || multiSamples == 4 || multiSamples == 8);
+						multiDesc.Count = multiSamples;
+						multiDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
+					}
+
 					// initialize Direct3D
-					if (CreateDirect3D())
+					if (CreateDirect3D(multiDesc))
 					{
 						try
 						{
@@ -547,7 +567,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 							// Initialize Core D3D.
 							std::unique_ptr<Pimp::D3D> pCoreD3D(new Pimp::D3D(
 								*s_pD3D, *s_pD3DContext, *s_pSwapChain, 
-								PLAYER_RENDER_ASPECT_RATIO, aspectRatio));
+								multiDesc, PLAYER_RENDER_ASPECT_RATIO, aspectRatio));
 							
 							// FIXME: get rid of these Core globals.
 							Pimp::gD3D = pCoreD3D.get();

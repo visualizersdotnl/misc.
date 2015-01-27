@@ -79,6 +79,7 @@ static UINT           *s_iAdapter;
 static UINT           *s_iOutput;
 static DXGI_MODE_DESC *s_mode;
 static float          *s_aspectRatio;
+static UINT           *s_multiSamples;
 static bool           *s_windowed;
 static bool           *s_vSync;
 
@@ -258,6 +259,13 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 			// Select primary adapter and display (verified to be present by Stub.cpp).
 			if (true == UpdateOutputs(hDialog, 0))
 				UpdateDisplayModes(hDialog, 0, 0);
+
+			// Add multi-sampling options and turn it off by default.
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "Off");
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "2");
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "4");
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "8");
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_SETCURSEL, 0, 0);
 		}
 
 		return TRUE;
@@ -315,6 +323,31 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 					*s_aspectRatio = -1.f;
 
 					// Display mode is defined by Stub.cpp in windowed mode.
+				}
+
+				// Multi-sampling.
+				const UINT iMultiSamples = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_GETCURSEL, 0, 0);
+				switch (iMultiSamples) // FIXME: not pretty, but it's hardcoded anyway.
+				{
+				case 0:
+					*s_multiSamples = 1;
+					break;
+
+				case 1:
+					*s_multiSamples = 2;
+					break;
+
+				case 2:
+					*s_multiSamples = 4;
+					break;
+
+				case 3:
+					*s_multiSamples = 8;
+					break;
+
+				default:
+					ASSERT(0);
+					*s_multiSamples = 1;
 				}
 			}
 
@@ -394,6 +427,7 @@ bool SetupDialog(
 	UINT &iOutput, 
 	DXGI_MODE_DESC &mode, 
 	float &aspectRatio,
+	UINT &multiSamples,
 	bool &windowed, 
 	bool &vSync,
 	IDXGIFactory1 &DXGIFactory)
@@ -404,6 +438,7 @@ bool SetupDialog(
 	s_iOutput      = &iOutput;
 	s_mode         = &mode;
 	s_aspectRatio  = &aspectRatio;
+	s_multiSamples = &multiSamples;
 	s_windowed     = &windowed;
 	s_vSync        = &vSync;
 	s_pDXGIFactory = &DXGIFactory;

@@ -4,6 +4,7 @@ NOTE: switching this codebase to Unicode is on the to-do list, right now there's
 !!
 
 These are a few files part of the TPBDS mark 3 player stub.
+TPBDS mark 3 is a demosystem by Superplek (Niels J. de Wit) & Glow (Thijs Kruithof).
 
 It's intent is to serve as a reference on how to correctly handle a DirectX-based Windows demo,
 or whatever else kind of audiovisual software. 
