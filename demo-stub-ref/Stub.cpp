@@ -445,7 +445,7 @@ static bool CreateDirect3D(const DXGI_SAMPLE_DESC &multiDesc)
 	message << "Can't create Direct3D 11.0 device.\n\n";
 	message << ((true == s_windowed) ? "Type: windowed.\n" : "Type: full screen.\n");
 	message << "Resolution: " << s_displayMode.Width << "*" << s_displayMode.Height << ".\n";
-	if (0 != multiDesc.Quality) message << "Multi-sampling enabled.\n";
+	if (0 != multiDesc.Quality) message << "Multi-sampling enabled (" << multiDesc.Count << " taps).\n";
 	message << "\n";
 	message << DXGetErrorString(hRes) << " - " << DXGetErrorDescription(hRes) << ".\n";
 
@@ -540,7 +540,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 				if (Audio_Create(iAudioDev, s_hWnd, Demo::GetAssetsPath() + kMP3Path, kMuteAudio))
 				{
 					DXGI_SAMPLE_DESC multiDesc;
-					if (1 > multiSamples)
+					if (multiSamples <= 1)
 					{
 						multiDesc.Count = 1;
 						multiDesc.Quality = 0;

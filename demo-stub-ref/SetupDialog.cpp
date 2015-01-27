@@ -262,9 +262,9 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 
 			// Add multi-sampling options and turn it off by default.
 			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "Off");
-			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "2");
-			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "4");
-			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "8");
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "2x");
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "4x");
+			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_ADDSTRING, 0, (LPARAM) "8x");
 			SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_SETCURSEL, 0, 0);
 		}
 
