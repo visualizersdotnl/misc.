@@ -15,8 +15,6 @@
 class AspectRatio
 {
 public:
-	AspectRatio() : numerator(0), denominator(1) {}
-
 	AspectRatio(unsigned int width, unsigned int height) :
 		width(width), height(height)
 	{
@@ -69,7 +67,7 @@ public:
 	}
 
 private:
-	unsigned int width, height;
+	const unsigned int width, height;
 	unsigned int numerator, denominator;
 };
 
