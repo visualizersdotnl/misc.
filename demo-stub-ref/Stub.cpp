@@ -548,6 +548,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 					else
 					{
 						// According to D3D11 spec. 1 (does not apply here), 2, 4 and 8 must be supported.
+						// As I don't have (nor intend to) have an actual device at this point I can't query (FIXME?).
 						ASSERT(multiSamples == 2 || multiSamples == 4 || multiSamples == 8);
 						multiDesc.Count = multiSamples;
 						multiDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
@@ -634,7 +635,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 #endif
 								
 									Demo::WorldRender();
-									Pimp::gD3D->Flip((true == windowed) ? 0 : true == vSync); // Windowed is always in vertical sync.
+									Pimp::gD3D->Flip((true == s_windowed) ? 0 : true == vSync); // Windowed is always in vertical sync.
 
 									// Crash handler test :)
 //									Pimp::gD3D = (Pimp::D3D*) 0x124;
