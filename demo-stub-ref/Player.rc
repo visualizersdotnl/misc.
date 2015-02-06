@@ -1,0 +1,134 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SETUP DIALOGEX 0, 0, 405, 393
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TPB ft. Inque present TPBDS mark 3 (sponsored by Polyvision Ultra)"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Steak",IDOK,270,372,56,14
+    PUSHBUTTON      "Quinoa",IDCANCEL,330,372,54,14
+    CONTROL         108,ID_DIALOG_PIC,"Static",SS_BITMAP | WS_BORDER,19,15,368,212,WS_EX_ACCEPTFILES
+    CONTROL         "",IDC_CHECK_WINDOWED,"Button",BS_AUTOCHECKBOX,24,306,8,8
+    LTEXT           "Run in windowed mode.",IDC_STATIC_WINDOWED,36,306,108,12
+    COMBOBOX        IDC_COMBO_AUDIO_ADAPTER,24,234,360,48,CBS_DROPDOWN
+    COMBOBOX        IDC_COMBO_RESOLUTION,24,288,360,54,CBS_DROPDOWN | WS_VSCROLL
+    COMBOBOX        IDC_COMBO_DISPLAY_ADAPTER,24,252,360,48,CBS_DROPDOWN | WS_VSCROLL
+    RTEXT           "Aspect ratio:",IDC_STATIC_ASPECT,126,306,255,8
+    COMBOBOX        IDC_COMBO_OUTPUT,24,270,360,54,CBS_DROPDOWN | WS_VSCROLL
+    CONTROL         "",IDC_CHECK_VSYNC,"Button",BS_AUTOCHECKBOX,24,318,8,8
+    LTEXT           "Sync. to refresh rate.",IDC_STATIC_VSYNC,36,318,108,12
+    COMBOBOX        IDC_COMBO_ASPECT,222,318,162,54,CBS_DROPDOWN | WS_VSCROLL
+    RTEXT           "Multi-sampling:",IDC_STATIC_MULTI,126,336,255,8
+    COMBOBOX        IDC_COMBO_MULTI,314,348,70,54,CBS_DROPDOWN | WS_VSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_SETUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 398
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 386
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Dutch (Netherlands) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON1               ICON                    "App.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP2             BITMAP                  "MiamiVice.bmp"
+#endif    // Dutch (Netherlands) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

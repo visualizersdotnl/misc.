@@ -528,7 +528,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 			const int iAudioDev = -1;                    // Default audio device.
 			const bool vSync = PLAYER_VSYNC_DEV;         // Dev. toggle.
 			float aspectRatio = -1.f;                    // Automatic mode.
-			UINT multiSamples = PLAYER_MULTI_SAMPLE_DEV; // Dev. multisampling.
+			UINT multiSamples = PLAYER_MULTI_SAMPLE_DEV; // Dev. multi-sampling.
 
 			// Other variables are already set up correctly.
 #endif

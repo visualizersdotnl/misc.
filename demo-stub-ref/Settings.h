@@ -2,8 +2,8 @@
 #pragma once
 
 // Demo ID & title (master branch).
-const std::string PLAYER_RELEASE_ID = "TPBDS mark 3 (master branch)";
-const std::string PLAYER_RELEASE_TITLE = "TPB-xxx (a backhand for Sally)";
+const std::string PLAYER_RELEASE_ID = "DSR-TOKYO";
+const std::string PLAYER_RELEASE_TITLE = "A backhand for Sally.";
 
 // For a fine selection of modes to choose from:
 // (source: https://github.com/visualizersdotnl/misc./blob/master/aspectratios.h)
@@ -23,7 +23,7 @@ const float PLAYER_SPRITE_RES_Y = 900.f;
 const bool PLAYER_WINDOWED_DEV = true;
 
 // Force setup dialog (disabled by default in debug and design builds).
-#define PLAYER_FORCE_SETUP_DIALOG
+// #define PLAYER_FORCE_SETUP_DIALOG
 
 // Dev. settings if dialog isn't being used:
 const bool PLAYER_VSYNC_DEV = false;
@@ -46,13 +46,14 @@ const unsigned int PLAYER_WINDOWED_RES_Y = 500;
 // const unsigned int PLAYER_WINDOWED_RES_Y = 400;
 
 // Shader binaries (with a 'b' appended to extension) are dumped on initial load.
-// By enabling this boolean you can use them at runtime for public release
+// By enabling this boolean you can use them at runtime for public release.
 const bool PLAYER_RUN_FROM_SHADER_BINARIES = false;
 
 // Audio settings.
-const std::string PLAYER_MP3_PATH = "ROSS2.mp3"; // Relative to asset root (see Demo.cpp).
+// const std::string PLAYER_MP3_PATH = "ROSS2.mp3"; // Relative to asset root (see Demo.cpp).
+const std::string PLAYER_MP3_PATH = "Triace - Payflash.mp3"; // Relative to asset root (see Demo.cpp).
 const bool PLAYER_MUTE_AUDIO = false;
 
 // Audio sync. settings.
-const double PLAYER_ROCKET_BPM = 127.0;
-const int PLAYER_ROCKET_RPB = 16; // Rows per beat, or: Rocket tracker precision.
+const double PLAYER_ROCKET_BPM = 120.0;
+const int PLAYER_ROCKET_RPB = 8; // Rows per beat, or: Rocket tracker precision.
