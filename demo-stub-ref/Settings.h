@@ -2,7 +2,7 @@
 #pragma once
 
 // Demo ID & title (master branch).
-const std::string PLAYER_RELEASE_ID = "DSR-TOKYO";
+const std::string PLAYER_RELEASE_ID = "TPB-xxx";
 const std::string PLAYER_RELEASE_TITLE = "A backhand for Sally.";
 
 // For a fine selection of modes to choose from:

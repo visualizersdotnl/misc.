@@ -6,7 +6,7 @@
 
 #include <Core/Platform.h>
 #include <iomanip> // for std::setprecision()
-#include <Core/Settings.h>
+#include <Core/D3D/Settings.h>
 #include "Resource.h"
 #include "SetLastError.h"
 #include "Audio.h"
@@ -73,11 +73,11 @@ private:
 
 // Pointers to settings.
 static int            *s_iAudioDev; 
-static UINT           *s_iAdapter;
-static UINT           *s_iOutput;
+static unsigned int   *s_iAdapter;
+static unsigned int   *s_iOutput;
 static DXGI_MODE_DESC *s_mode;
 static float          *s_aspectRatio;
-static UINT           *s_multiSamples;
+static unsigned int   *s_multiSamples;
 static bool           *s_windowed;
 static bool           *s_vSync;
 
@@ -88,7 +88,7 @@ static std::vector<DEVMODEW>       s_curOutputModes;
 static std::vector<DXGI_MODE_DESC> s_enumeratedModes;
 static std::list<AspectRatio>      s_aspectRatios;
 
-static bool UpdateOutputs(HWND hDialog, UINT iAdapter)
+static bool UpdateOutputs(HWND hDialog, unsigned int iAdapter)
 {
 	// Wipe combobox and mode array.
 	SendDlgItemMessage(hDialog, IDC_COMBO_OUTPUT, CB_RESETCONTENT, 0, 0);
@@ -149,7 +149,7 @@ static bool UpdateOutputs(HWND hDialog, UINT iAdapter)
 	return 0 != iOutput;
 }
 
-static void UpdateDisplayModes(HWND hDialog, UINT iAdapter, UINT iOutput)
+static void UpdateDisplayModes(HWND hDialog, unsigned int iAdapter, unsigned int iOutput)
 {
 	// Wipe comboboxes (modes & ratios).
 	SendDlgItemMessage(hDialog, IDC_COMBO_RESOLUTION, CB_RESETCONTENT, 0, 0);
@@ -276,7 +276,7 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 				// Get settings:
 
 				// - Audio device
-				*s_iAudioDev = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_AUDIO_ADAPTER, CB_GETCURSEL, 0, 0);
+				*s_iAudioDev = (int) SendDlgItemMessage(hDialog, IDC_COMBO_AUDIO_ADAPTER, CB_GETCURSEL, 0, 0);
 
 				// - Toggles
 				*s_windowed = BST_CHECKED == IsDlgButtonChecked(hDialog, IDC_CHECK_WINDOWED);
@@ -285,15 +285,15 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 				if (false == *s_windowed)
 				{
 					// Adapter & output (or display if you will).
-					*s_iAdapter  = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
-					*s_iOutput   = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_OUTPUT, CB_GETCURSEL, 0, 0);
+					*s_iAdapter  = (unsigned int) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
+					*s_iOutput   = (unsigned int) SendDlgItemMessage(hDialog, IDC_COMBO_OUTPUT, CB_GETCURSEL, 0, 0);
 					
 					// Display mode.
 					const size_t iMode = (size_t) SendDlgItemMessage(hDialog, IDC_COMBO_RESOLUTION, CB_GETCURSEL, 0, 0);
 					*s_mode = s_enumeratedModes[iMode];
 
 					// Aspect ratio.
-					const UINT iAspect = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_ASPECT, CB_GETCURSEL, 0 , 0);
+					const size_t iAspect = (size_t) SendDlgItemMessage(hDialog, IDC_COMBO_ASPECT, CB_GETCURSEL, 0 , 0);
 					if (0 == iAspect)
 					{
 						// Automatic mode.
@@ -324,7 +324,7 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 				}
 
 				// Multi-sampling.
-				const UINT iMultiSamples = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_GETCURSEL, 0, 0);
+				const unsigned int iMultiSamples = (unsigned int) SendDlgItemMessage(hDialog, IDC_COMBO_MULTI, CB_GETCURSEL, 0, 0);
 				switch (iMultiSamples) // FIXME: not pretty, but it's hardcoded anyway.
 				{
 				case 0:
@@ -360,7 +360,7 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 			{
 			case CBN_SELCHANGE:
 				// Adapter changed: update output plus mode & aspect list (for output #0).
-				*s_iAdapter = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
+				*s_iAdapter = (unsigned int) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
 				
 				// If an adapter has no outputs, prohibit further configuration and OK (start).
 				const bool hasOutputs = UpdateOutputs(hDialog, *s_iAdapter);
@@ -386,8 +386,8 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 			{
 			case CBN_SELCHANGE:
 				// Output changed: update mode & aspect list.
-				*s_iAdapter = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
-				*s_iOutput  = (UINT) SendDlgItemMessage(hDialog, IDC_COMBO_OUTPUT, CB_GETCURSEL, 0, 0);
+				*s_iAdapter = (unsigned int) SendDlgItemMessage(hDialog, IDC_COMBO_DISPLAY_ADAPTER, CB_GETCURSEL, 0, 0);
+				*s_iOutput  = (unsigned int) SendDlgItemMessage(hDialog, IDC_COMBO_OUTPUT, CB_GETCURSEL, 0, 0);
 				UpdateDisplayModes(hDialog, *s_iAdapter, *s_iOutput);
 
 				return 0;
@@ -421,11 +421,11 @@ static INT_PTR CALLBACK DialogProc(HWND hDialog, UINT uMsg, WPARAM wParam, LPARA
 bool SetupDialog(
 	HINSTANCE hInstance, 
 	int &iAudioDev, 
-	UINT &iAdapter, 
-	UINT &iOutput, 
+	unsigned int &iAdapter, 
+	unsigned int &iOutput, 
 	DXGI_MODE_DESC &mode, 
 	float &aspectRatio,
-	UINT &multiSamples,
+	unsigned int &multiSamples,
 	bool &windowed, 
 	bool &vSync,
 	IDXGIFactory1 &DXGIFactory)

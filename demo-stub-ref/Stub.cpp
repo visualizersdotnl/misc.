@@ -7,7 +7,7 @@
 	Main goal:
 	- Create and manage a simple render window.
 	- Initialize and maintain DXGI/D3D and create the device exactly like Core wants it.
-	- Kick off audio.
+	- Handle audio.
 	- Provide a stable main loop.
 	- Take care of proper shutdown and error message display.
 	
@@ -21,9 +21,8 @@
 #include <Core/Core.h>
 #include "Settings.h"
 #include "Resource.h"
-#include "SceneTools.h"
-#include "DebugCamera.h"
-#include "AutoShaderReload.h"
+//#include "DebugCamera.h"
+//#include "AutoShaderReload.h"
 #include "Audio.h"
 #include "SetupDialog.h"
 
@@ -39,12 +38,11 @@ const unsigned int kWindowedResX = PLAYER_WINDOWED_RES_X;
 const unsigned int kWindowedResY = PLAYER_WINDOWED_RES_Y;
 
 // When *not* using SetupDialog():
-//
+
 // In full screen mode the primary desktop resolution is adapted.
-//
 // Using the desktop resolution makes good sense: it's usually the display's optimal resolution.
 // A beam team can very well be instructed to select a more appropriate one for performance reasons.
-//
+
 // SetupDialog() allows for full user configuration.
 
 // global error message
@@ -69,8 +67,8 @@ static IDXGISwapChain      *s_pSwapChain  = nullptr;
 
 // Debug camera and it's state.
 #if defined(_DEBUG) || defined(_DESIGN)
-static AutoShaderReload* s_pAutoShaderReloader = nullptr;
-static DebugCamera* s_pDebugCamera = nullptr;
+//static AutoShaderReload* s_pAutoShaderReloader = nullptr;
+//static DebugCamera* s_pDebugCamera = nullptr;
 
 static bool s_isPaused = false;
 static bool s_isMouseTracking = false;
@@ -152,19 +150,22 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		s_isMouseTracking = true;
 		s_mouseTrackInitialX = LOWORD(lParam);
 		s_mouseTrackInitialY = HIWORD(lParam);
-		s_pDebugCamera->StartLookAt(); 
+//		s_pDebugCamera->StartLookAt(); 
 		break;
 
 	case WM_LBUTTONUP:
 		s_isMouseTracking = false;
-		s_pDebugCamera->EndLookAt();
+//		s_pDebugCamera->EndLookAt();
 		break;
 
 	case WM_MOUSEMOVE:
-		if (s_isMouseTracking) {
+		if (s_isMouseTracking) 
+		{
 			int posX = LOWORD(lParam);
 			int posY = HIWORD(lParam);
-			s_pDebugCamera->LookAt(posX - s_mouseTrackInitialX, posY - s_mouseTrackInitialY); }
+//			s_pDebugCamera->LookAt(posX - s_mouseTrackInitialX, posY - s_mouseTrackInitialY); 
+		}
+
 		break;
 #endif
 
@@ -187,35 +188,37 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				s_isPaused = !s_isPaused;
 				DEBUG_LOG(s_isPaused ? "Entering debug camera mode." : "Leaving debug camera mode.")
 
-				s_pDebugCamera->SetEnabled(s_isPaused);
+//				s_pDebugCamera->SetEnabled(s_isPaused);
 
 				if (false == s_windowed)
 					ShowCursor(true == s_isPaused);
 			}
+
 			break;
 #endif
 		}
 
 		// debug camera keyboard input
 #if defined(_DEBUG) || defined(_DESIGN)
-		if (s_isPaused)
+		if (true == s_isPaused)
 		{
-			if (wParam == 'A')
-				s_pDebugCamera->Move(Vector3(-1.0f, 0.0f, 0.0f));
-			else if (wParam == 'D')
-				s_pDebugCamera->Move(Vector3(+1.0f, 0.0f, 0.0f));
-			else if (wParam == 'W')
-				s_pDebugCamera->Move(Vector3( 0.0f, 0.0f,-1.0f));
-			else if (wParam == 'S')
-				s_pDebugCamera->Move(Vector3( 0.0f, 0.0f,+1.0f));
-			else if (wParam == 'Q' && !s_isMouseTracking)
-				s_pDebugCamera->Roll(false);
-			else if (wParam == 'E' && !s_isMouseTracking)
-				s_pDebugCamera->Roll(true);			
-			else if (wParam == VK_RETURN)
-				s_pDebugCamera->DumpCurrentTransformToOutputWindow();
+//			if (wParam == 'A')
+//				s_pDebugCamera->Move(Vector3(-1.0f, 0.0f, 0.0f));
+//			else if (wParam == 'D')
+//				s_pDebugCamera->Move(Vector3(+1.0f, 0.0f, 0.0f));
+//			else if (wParam == 'W')
+//				s_pDebugCamera->Move(Vector3( 0.0f, 0.0f,-1.0f));
+//			else if (wParam == 'S')
+//				s_pDebugCamera->Move(Vector3( 0.0f, 0.0f,+1.0f));
+//			else if (wParam == 'Q' && !s_isMouseTracking)
+//				s_pDebugCamera->Roll(false);
+//			else if (wParam == 'E' && !s_isMouseTracking)
+//				s_pDebugCamera->Roll(true);			
+//			else if (wParam == VK_RETURN)
+//				s_pDebugCamera->DumpCurrentTransformToOutputWindow();
 		}
 #endif
+
 		break;
 
 	case WM_ACTIVATE:
@@ -474,14 +477,10 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 	int cpuInfo[4];
 	__cpuid(cpuInfo, 1);
 	if (0 == (cpuInfo[2] & CPUID_FEAT_ECX_SSE4_1))
-//	if (0 == (cpuInfo[2] & CPUID_FEAT_ECX_AVX))
 	{
-		MessageBox(NULL, "Processor does not support SSE4.1 instructions.", "Error!", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(NULL, "Processor does not support SSE4.1 instructions.", PLAYER_RELEASE_TITLE.c_str(), MB_OK | MB_ICONEXCLAMATION);
 		return 1;
 	}
-
-	// initialize Matrix4 class (FIXME: to be replaced by DirectXMath)
-	Matrix4::Init();
 
 	// initialize DXGI
 	if (CreateDXGI(hInstance))
@@ -493,10 +492,10 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 		// Any additional DXGI/Win32 logic is handled in SetupDialog.cpp itself.
 
 		int iAudioDev;
-		UINT iAdapter, iOutput;
+		unsigned int iAdapter, iOutput;
 		DXGI_MODE_DESC dispMode;
 		float aspectRatio;
-		UINT multiSamples;
+		unsigned int multiSamples;
 		bool windowed;
 		bool vSync;
 
@@ -525,10 +524,10 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 #else
 		if (true)
 		{
-			const int iAudioDev = -1;                    // Default audio device.
-			const bool vSync = PLAYER_VSYNC_DEV;         // Dev. toggle.
-			float aspectRatio = -1.f;                    // Automatic mode.
-			UINT multiSamples = PLAYER_MULTI_SAMPLE_DEV; // Dev. multi-sampling.
+			const int iAudioDev = -1;                            // Default audio device.
+			const bool vSync = PLAYER_VSYNC_DEV;                 // Dev. toggle.
+			float aspectRatio = -1.f;                            // Automatic mode.
+			unsigned int multiSamples = PLAYER_MULTI_SAMPLE_DEV; // Dev. multi-sampling.
 
 			// Other variables are already set up correctly.
 #endif
@@ -569,24 +568,21 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 							std::unique_ptr<Pimp::D3D> pCoreD3D(new Pimp::D3D(
 								*s_pD3D, *s_pD3DContext, *s_pSwapChain, 
 								multiDesc, PLAYER_RENDER_ASPECT_RATIO, aspectRatio));
-							
-							// FIXME: get rid of these Core globals.
-							Pimp::gD3D = pCoreD3D.get();
 
 							// Prepare demo resources.
 							const char *rocketClient = (0 == strlen(lpCmdLine)) ? "localhost" : lpCmdLine;
 							DemoRef demoRef(rocketClient);
-							if (true == demoRef.IsOK())
+							if (true == demoRef.Initialized())
 							{
 #if defined(_DEBUG) || defined(_DESIGN)
-								Pimp::World *pWorld = Demo::GetWorld();
+//								Pimp::World *pWorld = Demo::GetWorld();
 
-								std::unique_ptr<AutoShaderReload> pAutoShaderReload(new AutoShaderReload(pWorld, 0.5f /* checkInterval */));
-								std::unique_ptr<DebugCamera> pDebugCamera(new DebugCamera(pWorld));
+//								std::unique_ptr<AutoShaderReload> pAutoShaderReload(new AutoShaderReload(pWorld, 0.5f /* checkInterval */));
+//								std::unique_ptr<DebugCamera> pDebugCamera(new DebugCamera(pWorld));
 
 								// FIXME: this isn't very pretty.
-								s_pAutoShaderReloader = pAutoShaderReload.get();
-								s_pDebugCamera = pDebugCamera.get();
+//								s_pAutoShaderReloader = pAutoShaderReload.get();
+//								s_pDebugCamera = pDebugCamera.get();
 
 								DEBUG_LOG("================================================================================");
 								DEBUG_LOG("TPBDS mark III is now live!");
@@ -619,26 +615,22 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 									const float timeElapsed = time-prevTimeElapsed;
 									prevTimeElapsed = time;
 
-#if defined(_DEBUG) || defined(_DESIGN)
-									s_pAutoShaderReloader->Update();
-
-									if (true == s_isPaused)
-										Demo::Tick(timeElapsed, s_pDebugCamera->Get());
-									else
-									{
-										if (false == Demo::Tick(timeElapsed))
-											break;
-									}
-#else
 									if (false == Demo::Tick(timeElapsed))
 										break;
-#endif
-								
-									Demo::WorldRender();
-									Pimp::gD3D->Flip((true == s_windowed) ? 0 : true == vSync); // Windowed is always in vertical sync.
 
-									// Crash handler test :)
-//									Pimp::gD3D = (Pimp::D3D*) 0x124;
+#if defined(_DEBUG) || defined(_DESIGN)
+									// Update dev. shaders.
+//									s_pAutoShaderReloader->Update();
+
+									// Supply debug camera.
+									// Do remember that a Pimp::Scene implementation has no strict obligation to actually use it.
+									Demo::Render((true == s_isPaused) ? nullptr : nullptr);
+#else
+									Demo::Render();
+#endif
+
+									// Desktop ignores vertical sync., otherwise sync. to refresh rate (usually 60Hz).
+									Pimp::gD3D->Flip((true == s_windowed) ? 0 : true == vSync); 
 
 									if (true == s_windowed)
 									{
@@ -664,7 +656,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 						}
 
 						// Catch Core exceptions.
-						// Other exceptions should either signal the debugger (development) or are "handled" by the last resort handler below.
+						// Other exceptions should either signal the debugger (development) or are intercepted by the "last resort" handler below.
 						catch(const Pimp::Exception &exception)
 						{
 							SetLastError(exception.what());
@@ -685,7 +677,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
 	if (!s_lastError.empty())
 	{
-		MessageBox(NULL, s_lastError.c_str(), "Error!", MB_OK | MB_ICONEXCLAMATION);
+		MessageBox(NULL, s_lastError.c_str(), PLAYER_RELEASE_ID.c_str(), MB_OK | MB_ICONEXCLAMATION);
 		return 1;
 	}
 
