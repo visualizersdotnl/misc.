@@ -1,19 +1,17 @@
 	
 /*
 	TPBDS mark III player stub.
+	by Superplek/Bypass
 
-	In the codebase, look for 'FIXME' & '@plek' -> stuff to either, fix, remove or formalize.
-
-	Main goal:
-	- Create and manage a simple render window.
-	- Initialize and maintain DXGI/D3D and create the device exactly like Core wants it.
-	- Handle audio.
-	- Provide a stable main loop.
-	- Take care of proper shutdown and error message display.
-	
 	To do:
-	- Add basic leak detection?
+	- Look for 'FIXME' & '@plek' -> stuff to either fix, remove or formalize.
+	- Add leak dump?
 	- Integrate XInput code from INDIGO Jukebox?
+
+	Additional dependencies:
+	- Rocket (compiled along).
+	- DevIL x64 (.lib in project).
+	- Bass x64 (.lib in project).
 */
 
 #include <Core/Platform.h>
@@ -21,7 +19,6 @@
 #include <Core/Core.h>
 #include "Settings.h"
 #include "Resource.h"
-//#include "DebugCamera.h"
 //#include "AutoShaderReload.h"
 #include "Audio.h"
 #include "SetupDialog.h"
@@ -65,15 +62,8 @@ static ID3D11Device        *s_pD3D        = nullptr;
 static ID3D11DeviceContext *s_pD3DContext = nullptr;
 static IDXGISwapChain      *s_pSwapChain  = nullptr;
 
-// Debug camera and it's state.
 #if defined(_DEBUG) || defined(_DESIGN)
-//static AutoShaderReload* s_pAutoShaderReloader = nullptr;
-//static DebugCamera* s_pDebugCamera = nullptr;
-
-static bool s_isPaused = false;
-static bool s_isMouseTracking = false;
-static int  s_mouseTrackInitialX;
-static int  s_mouseTrackInitialY;
+//	static AutoShaderReload* s_pAutoShaderReloader = nullptr;
 #endif
 
 static bool CreateDXGI(HINSTANCE hInstance)
@@ -144,30 +134,17 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	switch (uMsg)
 	{
-		// debug camera mouse input
-#if defined(_DEBUG) || defined(_DESIGN)
 	case WM_LBUTTONDOWN:
-		s_isMouseTracking = true;
-		s_mouseTrackInitialX = LOWORD(lParam);
-		s_mouseTrackInitialY = HIWORD(lParam);
-//		s_pDebugCamera->StartLookAt(); 
+		// Debug drag.
 		break;
 
 	case WM_LBUTTONUP:
-		s_isMouseTracking = false;
-//		s_pDebugCamera->EndLookAt();
+		// Debug release.
 		break;
 
 	case WM_MOUSEMOVE:
-		if (s_isMouseTracking) 
-		{
-			int posX = LOWORD(lParam);
-			int posY = HIWORD(lParam);
-//			s_pDebugCamera->LookAt(posX - s_mouseTrackInitialX, posY - s_mouseTrackInitialY); 
-		}
-
+		// Debug move.
 		break;
-#endif
 
 	case WM_CLOSE:
 		PostQuitMessage(0); // terminate message loop
@@ -181,43 +158,22 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			PostMessage(hWnd, WM_CLOSE, 0, 0);
 			break;
 		
-		// debug camera (un)pause 
-#if defined(_DEBUG) || defined(_DESIGN)
 		case VK_SPACE:
-			{
-				s_isPaused = !s_isPaused;
-				DEBUG_LOG(s_isPaused ? "Entering debug camera mode." : "Leaving debug camera mode.")
-
-//				s_pDebugCamera->SetEnabled(s_isPaused);
-
-				if (false == s_windowed)
-					ShowCursor(true == s_isPaused);
-			}
-
+			// Debug (un)pause.
 			break;
-#endif
 		}
 
-		// debug camera keyboard input
-#if defined(_DEBUG) || defined(_DESIGN)
-		if (true == s_isPaused)
+		if (0)
 		{
-//			if (wParam == 'A')
-//				s_pDebugCamera->Move(Vector3(-1.0f, 0.0f, 0.0f));
-//			else if (wParam == 'D')
-//				s_pDebugCamera->Move(Vector3(+1.0f, 0.0f, 0.0f));
-//			else if (wParam == 'W')
-//				s_pDebugCamera->Move(Vector3( 0.0f, 0.0f,-1.0f));
-//			else if (wParam == 'S')
-//				s_pDebugCamera->Move(Vector3( 0.0f, 0.0f,+1.0f));
-//			else if (wParam == 'Q' && !s_isMouseTracking)
-//				s_pDebugCamera->Roll(false);
-//			else if (wParam == 'E' && !s_isMouseTracking)
-//				s_pDebugCamera->Roll(true);			
-//			else if (wParam == VK_RETURN)
-//				s_pDebugCamera->DumpCurrentTransformToOutputWindow();
+			// Debug move.
+			if (wParam == 'A') {}
+			else if (wParam == 'D') {}
+			else if (wParam == 'W') {}
+			else if (wParam == 'S') {}
+			else if (wParam == 'Q') {}
+			else if (wParam == 'E') {}
+			else if (wParam == VK_RETURN) {}
 		}
-#endif
 
 		break;
 
@@ -571,31 +527,14 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
 							// Prepare demo resources.
 							const char *rocketClient = (0 == strlen(lpCmdLine)) ? "localhost" : lpCmdLine;
-							DemoRef demoRef(rocketClient);
-							if (true == demoRef.Initialized())
+							DemoRef demoRef;
+							if (true == demoRef.Initialize(rocketClient))
 							{
 #if defined(_DEBUG) || defined(_DESIGN)
-//								Pimp::World *pWorld = Demo::GetWorld();
-
 //								std::unique_ptr<AutoShaderReload> pAutoShaderReload(new AutoShaderReload(pWorld, 0.5f /* checkInterval */));
-//								std::unique_ptr<DebugCamera> pDebugCamera(new DebugCamera(pWorld));
-
-								// FIXME: this isn't very pretty.
-//								s_pAutoShaderReloader = pAutoShaderReload.get();
-//								s_pDebugCamera = pDebugCamera.get();
 
 								DEBUG_LOG("================================================================================");
 								DEBUG_LOG("TPBDS mark III is now live!");
-								DEBUG_LOG("");
-								DEBUG_LOG("> SPACE: Toggle debug camera.");
-								DEBUG_LOG("");
-								DEBUG_LOG("Controls:");
-								DEBUG_LOG("> W,S,A,D:   Translate.");
-								DEBUG_LOG("> Q,E:       Roll.");
-								DEBUG_LOG("> Drag LMB:  Adjust yaw and pitch.");
-								DEBUG_LOG("> ENTER:     Dump current debug camera transform to output window.");
-								DEBUG_LOG("");
-								DEBUG_LOG("This, of course, only works on scenes that use the Rocket-driven default camera.");
 								DEBUG_LOG("================================================================================");
 #endif	
 
@@ -621,13 +560,9 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 #if defined(_DEBUG) || defined(_DESIGN)
 									// Update dev. shaders.
 //									s_pAutoShaderReloader->Update();
-
-									// Supply debug camera.
-									// Do remember that a Pimp::Scene implementation has no strict obligation to actually use it.
-									Demo::Render((true == s_isPaused) ? nullptr : nullptr);
-#else
-									Demo::Render();
 #endif
+
+									Demo::Render();
 
 									// Desktop ignores vertical sync., otherwise sync. to refresh rate (usually 60Hz).
 									Pimp::gD3D->Flip((true == s_windowed) ? 0 : true == vSync); 
