@@ -12,6 +12,9 @@
 	- Rocket (compiled along).
 	- DevIL x64 (.lib in project).
 	- Bass x64 (.lib in project).
+
+	Up until Direct3D & audio are both fully initialized there is no reliance on C++ exceptions.
+	Errors can be reported through the SetLastError() mechanism and will be reported before exit.
 */
 
 #include <Core/Platform.h>
@@ -19,7 +22,6 @@
 #include <Core/Core.h>
 #include "Settings.h"
 #include "Resource.h"
-//#include "AutoShaderReload.h"
 #include "Audio.h"
 #include "SetupDialog.h"
 
@@ -61,10 +63,6 @@ static bool s_wndIsActive; // set by WindowProc()
 static ID3D11Device        *s_pD3D        = nullptr;
 static ID3D11DeviceContext *s_pD3DContext = nullptr;
 static IDXGISwapChain      *s_pSwapChain  = nullptr;
-
-#if defined(_DEBUG) || defined(_DESIGN)
-//	static AutoShaderReload* s_pAutoShaderReloader = nullptr;
-#endif
 
 static bool CreateDXGI(HINSTANCE hInstance)
 {
@@ -512,7 +510,7 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 					// initialize Direct3D
 					if (CreateDirect3D(multiDesc))
 					{
-						try
+						try // Core objects throw exceptions on error.
 						{
 							if (-1.f == aspectRatio)
 							{
@@ -527,14 +525,13 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
 							// Prepare demo resources.
 							const char *rocketClient = (0 == strlen(lpCmdLine)) ? "localhost" : lpCmdLine;
-							DemoRef demoRef;
-							if (true == demoRef.Initialize(rocketClient))
+							DemoInst demo;
+							if (true == demo.Initialize(rocketClient))
 							{
 #if defined(_DEBUG) || defined(_DESIGN)
-//								std::unique_ptr<AutoShaderReload> pAutoShaderReload(new AutoShaderReload(pWorld, 0.5f /* checkInterval */));
-
 								DEBUG_LOG("================================================================================");
-								DEBUG_LOG("TPBDS mark III is now live!");
+								DEBUG_LOG("TPBDS mark III is now live (in DEBUG/DESIGN mode).");
+								DEBUG_LOG("Connected to GNU Rocket client: %s", rocketClient);
 								DEBUG_LOG("================================================================================");
 #endif	
 
@@ -556,11 +553,6 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
 									if (false == Demo::Tick(timeElapsed))
 										break;
-
-#if defined(_DEBUG) || defined(_DESIGN)
-									// Update dev. shaders.
-//									s_pAutoShaderReloader->Update();
-#endif
 
 									Demo::Render();
 
@@ -597,20 +589,18 @@ int __stdcall Main(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 							SetLastError(exception.what());
 						}
 					}
-
-					DestroyDirect3D();
 				}
-			
-				Audio_Destroy();
 			}
-		
-			DestroyAppWindow(hInstance);
 		} // SetupDialog()
 	}
 
+	// Destroy stub resources in reverse order.
+	Audio_Destroy();
+	DestroyDirect3D();
+	DestroyAppWindow(hInstance);
 	DestroyDXGI();
 
-	if (!s_lastError.empty())
+	if (false == s_lastError.empty())
 	{
 		MessageBox(NULL, s_lastError.c_str(), PLAYER_RELEASE_ID.c_str(), MB_OK | MB_ICONEXCLAMATION);
 		return 1;
@@ -647,5 +637,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 	}
 #endif
 
-	return 0;
+	return 1;
 }
