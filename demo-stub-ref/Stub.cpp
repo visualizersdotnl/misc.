@@ -12,6 +12,7 @@
 	- Rocket (compiled along).
 	- DevIL x64 (.lib in project).
 	- Bass x64 (.lib in project).
+	- See Core/Platform.h.
 
 	Up until Direct3D & audio are both fully initialized there is no reliance on C++ exceptions.
 	Errors can be reported through the SetLastError() mechanism and will be reported before exit.
