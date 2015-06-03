@@ -8,13 +8,12 @@ It's intent is to serve as a reference on how to correctly handle a modern Direc
 or whatever else kind of audiovisual software.
 
 It won't compile nor is directly usable in it's current form.
-The entire engine will be up for release in a few months, or maybe I'll just give it to you if you got proper haircut.
+The entire engine will be released eventually.
 
 Disclaimer: in development, I'm updating on a regular basis, but expect a bug or two.
 Or even better: tell me what I'm doing wrong and why.
 
-Want to know more about TPBDS, contribute or perhaps have some more of our industry standard code? *cough* :)
-Feel free to e-mail (ndewit@gmail.com) or look me up on Facebook.
+Feel free to e-mail (ndewit@gmail.com).
 
 Cheers,
 - Niels, otherwise known as Superplek/Bypass
