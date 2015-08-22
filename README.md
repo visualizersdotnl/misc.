@@ -1,5 +1,4 @@
 # misc.
 
-Snippets of various nature.
+Small tests, examples & snippets.
 
-A mention would be nice if you use any of this.

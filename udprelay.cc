@@ -1,5 +1,21 @@
 
-// UDP multicast to TCP relay server for Linux/Ubuntu.
+/*
+	UDP multicast to TCP relay server for Linux (Ubuntu).
+
+	This straight proxy server was written early 2014, mostly as a test to
+	see if our Linux machines could take in hefty volumes of UDP multicast
+	from different sources without making one of the CPU's cores spike, like
+	our Windows 7 machines that ran the actual stream monitoring software.
+
+	Linux didn't have this problem plus the Windows machines seemed much
+	happier with TCP so it was decided to stick with this solution for time 
+	being (we had plenty reasons).
+
+	I abandoned ship before this piece of code was finalized.
+
+	- This is a daemon.
+	- Uses standard output (see LOG()), so redirect it (use log rotation).
+*/
 
 // Running Ubuntu? For the UDP (multicast) NIC, don't forget to:
 // 1) Assign a static IP through the network manager.
@@ -10,7 +26,7 @@
 // Or call Saul.
 
 // To do (major):
-// - Instead of multiple instances, instantiate multiple servers (*).
+// - Multiple servers (RequestManager instances).
 
 // To do (minor):
 // - Unicast support.
@@ -91,10 +107,10 @@ const size_t kMegabit = 1000*kKilobit;
 const size_t kGigabit = 1000*kMegabit;
 
 // Server configuration path.
-const std::string kConfigPath = "/etc/dvbproxy.conf";
+const std::string kConfigPath = "/etc/udprelay.conf";
 
 // PID file path (for daemon).
-const std::string kPIDPath = "/var/run/dvbproxy.pid";
+const std::string kPIDPath = "/var/run/udprelay.id";
 
 
 const std::string kNullIP = "0.0.0.0";
@@ -768,7 +784,7 @@ private: // Just some private data, data for money...
 
 										std::stringstream htmlStream;
 										htmlStream << MakeHTMLResponseHeader();
-										htmlStream << "<html><body><h1>DVBProxy server instance terminated.</h1></body></html>";
+										htmlStream << "<html><body><h1>udprelay - Terminated.</h1></body></html>";
 
 										// Send confirmation (unchecked).
 										send(relaySocket, htmlStream.str().c_str(), htmlStream.str().length(), 0);
@@ -783,7 +799,7 @@ private: // Just some private data, data for money...
 
 										std::stringstream htmlStream;
 										htmlStream << MakeHTMLResponseHeader();
-										htmlStream << "<html><head><meta http-equiv=\"refresh\" content=\"5\"><style>body{background-color: #11a9e2;background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0d86b3), to(#11a9e2));background-image: -moz-linear-gradient(#0d86b3, #11a9e2);background-repeat: no-repeat;padding: 20px;text-rendering: optimizeLegibility;font: 14px/20px \"Helvetica Neue\", Helvetica, Arial, sans-serif;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1, h2, p, span{color: #fff;color: rgba(255, 255, 255, 0.75);text-align: center;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1{margin: 10;font: bold 70px/1 \"Helvetica Neue\", Helvetica, Arial, sans-serif;color: #fff;text-shadow: 0 1px 0 #cccccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbbbbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaaaaa, 0 6px 1px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.3), 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.2), 0 20px 20px rgba(0, 0, 0, 0.15);-webkit-transition: .2s all linear;}span{color: rgba(255, 255, 255, 1);}h1{text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15);}</style><head><body><h1>DVBProxy (C)2014 RTSS B.V.</h1><hr><h2>Current UDP traffic: <span>" << recvStr << "</span> | Current TCP traffic: <span>" << sentStr << "</span></h2></body></html>";
+										htmlStream << "<html><head><meta http-equiv=\"refresh\" content=\"5\"><style>body{background-color: #11a9e2;background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0d86b3), to(#11a9e2));background-image: -moz-linear-gradient(#0d86b3, #11a9e2);background-repeat: no-repeat;padding: 20px;text-rendering: optimizeLegibility;font: 14px/20px \"Helvetica Neue\", Helvetica, Arial, sans-serif;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1, h2, p, span{color: #fff;color: rgba(255, 255, 255, 0.75);text-align: center;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1{margin: 10;font: bold 70px/1 \"Helvetica Neue\", Helvetica, Arial, sans-serif;color: #fff;text-shadow: 0 1px 0 #cccccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbbbbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaaaaa, 0 6px 1px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.3), 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.2), 0 20px 20px rgba(0, 0, 0, 0.15);-webkit-transition: .2s all linear;}span{color: rgba(255, 255, 255, 1);}h1{text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15);}</style><head><body><h1>udprelay</h1><hr><h2>Current UDP traffic: <span>" << recvStr << "</span> | Current TCP traffic: <span>" << sentStr << "</span></h2></body></html>";
 
 										// Send information (unchecked).
 										send(relaySocket, htmlStream.str().c_str(), htmlStream.str().length(), 0);
@@ -829,7 +845,7 @@ private: // Just some private data, data for money...
 										// Invalid command specified.
 										std::stringstream htmlStream;
 										htmlStream << MakeHTMLResponseHeader();
-										htmlStream << "<html><head><style>body{background-color: #8A0808;padding: 20px;text-rendering: optimizeLegibility;font: 14px/20px \"Helvetica Neue\", Helvetica, Arial, sans-serif;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1, h2, p, span{color: #fff;color: rgba(255, 255, 255, 1);text-align: center;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1{margin: 10;font: bold 70px/1 \"Helvetica Neue\", Helvetica, Arial, sans-serif;color: #fff;text-shadow: 0 1px 0 #cccccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbbbbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaaaaa, 0 6px 1px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.3), 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.2), 0 20px 20px rgba(0, 0, 0, 0.15);-webkit-transition: .2s all linear;}h1{text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15);}</style><head><body><h1>DVBProxy (C)2014 RTSS B.V.</h1><hr><h2>Invalid command specified!</h2></body></html>";
+										htmlStream << "<html><head><style>body{background-color: #8A0808;padding: 20px;text-rendering: optimizeLegibility;font: 14px/20px \"Helvetica Neue\", Helvetica, Arial, sans-serif;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1, h2, p, span{color: #fff;color: rgba(255, 255, 255, 1);text-align: center;text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);}h1{margin: 10;font: bold 70px/1 \"Helvetica Neue\", Helvetica, Arial, sans-serif;color: #fff;text-shadow: 0 1px 0 #cccccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbbbbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaaaaa, 0 6px 1px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.3), 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.2), 0 20px 20px rgba(0, 0, 0, 0.15);-webkit-transition: .2s all linear;}h1{text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15);}</style><head><body><h1>udprelay</h1><hr><h2>Invalid command specified!</h2></body></html>";
 										
 										// Send information (unchecked).
 										send(relaySocket, htmlStream.str().c_str(), htmlStream.str().length(), 0);
@@ -878,7 +894,7 @@ private: // Just some private data, data for money...
 		// #FIXME: check if this is more or less complete, and if a correct date would be necessary.
 		std::string header;
 		header  = "HTTP/1.1 200 OK\n";
-		header += "Server: DVBProxy\n";
+		header += "Server: udprelay\n";
 		header += "Connection: close\n";
 		header += "Content-Type: text/html; charset=ISO-8859-1\n";
 		header += "\n";
@@ -964,7 +980,7 @@ int main(int argC, char **argV)
 	sigaction(SIGTERM, &sigAction, NULL);
 	sigaction(SIGINT,  &sigAction, NULL);
 
-	LOG("DVBProxy (" << kPlatform << ") " << kVersionMajor << "." << kVersionMinor << " - UDP multicast to TCP relay server.");
+	LOG("udprelay (" << kPlatform << ") " << kVersionMajor << "." << kVersionMinor << " - UDP multicast to TCP relay server.");
 	LOG("(C) " << __DATE__ <<  " RTSS B.V.");
 
 	// FIXME: lame expiration check for BETA.
@@ -977,7 +993,7 @@ int main(int argC, char **argV)
 
 	if (0 != getuid())
 	{
-		LOG("Please run this program as root: sudo ./dvbproxy");
+		LOG("Please run this program as root: sudo ./udprelay");
 		return 1;
 	}
 
@@ -1070,7 +1086,7 @@ int main(int argC, char **argV)
 		// Attempt to lock PID file.
 		if (-1 == lockf(hPIDFile, F_TLOCK, 0))
 		{
-			LOG("Could not lock PID file. DVBProxy can only run 1 instance at a time!");
+			LOG("Could not lock PID file (1 instance at a time!).");
 			return EXIT_FAILURE;
 		}
 	 
